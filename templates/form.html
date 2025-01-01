@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Список вакансий{% endblock %}
+
+{% block content %}
+<h1>Список вакансий</h1>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Профессия</th>
+            <th>Город</th>
+            <th>Зарплата</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for vacancy in vacancies %}
+        <tr>
+            <td>{{ vacancy.id }}</td>
+            <td>{{ vacancy.profession.name }}</td>
+            <td>{{ vacancy.city.name }}</td>
+            <td>{{ vacancy.salary }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
