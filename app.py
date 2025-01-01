@@ -1,17 +1,28 @@
 from flask import Flask, render_template
-from models.models import db, Vacancy
-
+from models.models import Vacancy, init_db
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, joinedload 
+from contextlib import contextmanager
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db.init_app(app)  
+DATABASE_URL = 'sqlite:///site.db'
+engine = create_engine(DATABASE_URL, echo=True)
 
-with app.app_context():
-    db.create_all() 
+init_db(engine)
 
+Session = sessionmaker(bind=engine)
+
+
+@contextmanager
+def session_scope():
+    session = Session()
+    try:
+        yield session
+    finally:
+        session.close()
+        
 
 @app.route('/')
 def index():
@@ -26,7 +37,9 @@ def contacts():
 
 @app.route('/form')
 def form_view():       
-    vacancies = Vacancy.query.all()
+    with session_scope() as session: 
+        vacancies = session.query(Vacancy).options(joinedload(Vacancy.profession), 
+                                                    joinedload(Vacancy.city)).all()
     return render_template('form.html', vacancies=vacancies)
 
 
