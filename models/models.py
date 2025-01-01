@@ -1,20 +1,58 @@
-from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
-db = SQLAlchemy()  
+Base = declarative_base()
 
-class City(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+class City(Base):
+    __tablename__ = 'city'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
 
-class Profession(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    vacancies = relationship("Vacancy", back_populates="city")
 
-class Vacancy(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    profession_id = db.Column(db.Integer, db.ForeignKey('profession.id'), nullable=False)
-    city_id = db.Column(db.Integer, db.ForeignKey('city.id'), nullable=False)
-    salary = db.Column(db.Float, nullable=False)
+    def __init__(self, name):
+        self.name = name
 
-    profession = db.relationship('Profession', backref='vacancies')
-    city = db.relationship('City', backref='vacancies')
+    def __str__(self):
+        return f'{self.id}) {self.name}'
+
+
+class Profession(Base):
+    __tablename__ = 'profession'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+
+    vacancies = relationship("Vacancy", back_populates="profession")
+
+    def __init__(self, name):
+        self.name = name
+    
+    def __str__(self):
+        return f'{self.id}) {self.name}'
+
+
+class Vacancy(Base):
+    __tablename__ = 'vacancy'
+    
+    id = Column(Integer, primary_key=True)
+    profession_id = Column(Integer, ForeignKey('profession.id'), nullable=False)
+    city_id = Column(Integer, ForeignKey('city.id'), nullable=False)
+    salary = Column(Float, nullable=False)
+
+    profession = relationship("Profession", back_populates="vacancies")
+    city = relationship("City", back_populates="vacancies")
+
+    def __init__(self, profession, city, salary):
+        self.profession = profession
+        self.city = city
+        self.salary = salary
+
+    def __str__(self):
+        return f'{self.id}) {self.profession.name} in {self.city.name}: {self.salary}'
+
+
+def init_db(engine):
+    Base.metadata.create_all(engine)
